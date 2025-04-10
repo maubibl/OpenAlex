@@ -18,7 +18,7 @@ def fetch_openalex_records(openalex_ids, output_file):
         output_file (str): Path to the output file where the response will be saved.
     """
     headers = {
-        "User-Agent": "mailto=aron.lindhagen@mau.se"
+        "User-Agent": "mailto=[Your emailadress]"
     }
     
     all_records = []  # List to store all fetched records
