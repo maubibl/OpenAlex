@@ -20,3 +20,6 @@ This script:
 ### `transOA.py`
 This script:
 1. Converts a list of JSON records into a single DIVA MODS XML file with a `<modsCollection>` root element.
+
+## How to use the scripts:
+Add your email to the header of the API call in importOpenAlex.py (line 21). Add the OpenAlex IDs of the records you want to import in line 9. Run the script
