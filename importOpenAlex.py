@@ -5,16 +5,16 @@ import xml.etree.ElementTree as ET
 import datetime  # Import datetime for date formatting
 
 # List of OpenAlex IDs to fetch
-openalex_ids = [
-    "W4408705040", "W4408739901", "W4408955711", "W4409030108", "W4408683935", "W4408534664", "W4408062765", "W4402010066", "W4391714255", "W4388500067", "W3091052244", "W4393038621", "W3138918606", "W3137013492", "W3136016939", "W3097165576", "W3030762531", "W2995861852", "W4287648201", "W3092618350", "W4296689300", "W4296689348", "W3111701046"
-]
+openalex_ids = ["W4416058888","W4416100601","W4416100703","W4416197466","W4416544822","W4416567245","W4416697368","W4416735611","W7104457781","W7104625779","W7104636571","W7104702173","W7105642122","W7106579469","W7106647321","W7106768176"]
+doi = []
 
-def fetch_openalex_records(openalex_ids, output_file):
+def fetch_openalex_records(openalex_ids, dois, output_file):
     """
-    Fetch records from OpenAlex API and save them to a file.
+    Fetch records from OpenAlex API using both OpenAlex IDs and DOIs, and save them to a file.
 
     Args:
         openalex_ids (list): List of OpenAlex IDs to fetch.
+        dois (list): List of DOIs to fetch.
         output_file (str): Path to the output file where the response will be saved.
     """
     headers = {
@@ -24,6 +24,7 @@ def fetch_openalex_records(openalex_ids, output_file):
     all_records = []  # List to store all fetched records
 
     try:
+        # Fetch by OpenAlex IDs
         for openalex_id in openalex_ids:
             url = f"https://api.openalex.org/works/{openalex_id}"
             response = requests.get(url, headers=headers)
@@ -31,6 +32,14 @@ def fetch_openalex_records(openalex_ids, output_file):
             record = response.json()
             all_records.append(record)
         
+        # Fetch by DOIs
+        for doi in dois:
+            url = f"https://api.openalex.org/works/https://doi.org/{doi}"
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            record = response.json()
+            all_records.append(record)
+
         with open(output_file, "w", encoding="utf-8") as file:
             json.dump(all_records, file, indent=4)
         
@@ -130,7 +139,7 @@ if __name__ == "__main__":
     output_file = "openalex_records.json"
     
     # Fetch and save records
-    fetch_openalex_records(openalex_ids, output_file)
+    fetch_openalex_records(openalex_ids, doi, output_file)
     
     # Generate today's date in YYMMDD format
     today_date = datetime.datetime.now().strftime("%y%m%d")

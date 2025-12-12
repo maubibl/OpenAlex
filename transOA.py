@@ -90,7 +90,21 @@ def json_to_xml(json_data_list, output_file):
         "ET": "Ethiopia",
         "SG": "Singapore",
         "BD": "Bangladesh",
-        "IR": "Iran"
+        "IR": "Iran",
+        "HK": "Hong Kong",
+        "SZ": "Swaziland",
+        "TW": "Taiwan",
+        "PH": "Philippines",
+        "LV": "Latvia",
+        "LS": "Lesotho",
+        "AR": "Argentina",
+        "TH": "Thailand",
+        "SK": "Slovakia",
+        "GE": "Georgia",
+        "RO": "Romania",
+        "BG": "Bulgaria",
+        "SI": "Slovenia",
+        "KH": "Cambodia"
         # Add more mappings as needed
     }
 
@@ -101,56 +115,83 @@ def json_to_xml(json_data_list, output_file):
             "xsi:schemaLocation": "http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-7.xsd",
         })
 
-        # Add genre elements based on type_crossref
-        type_crossref = json_data.get("type_crossref", "")
+        # Add genre elements based on primary_location raw_type
+        primary_location = json_data.get("primary_location", {})
+        primary_location_raw_type = primary_location.get("raw_type", "")
 
-        if type_crossref == "journal-article":
-            ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "refereed"
-            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "article"
-            ET.SubElement(mods, "genre", {"authority": "svep", "type": "publicationType"}).text = "art"
-            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Article in journal"
-            ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "article"
-        elif type_crossref == "proceedings-article":
+        if primary_location_raw_type in ["proceedings-article", "Conference papers", "conference paper", "Conference Proceeding", "Conference Paper, peer reviewed","contributiontobookanthology/conference","contributiontoconference/paper","info:eu-repo/semantics/conferencePaper","InProceedings","Paper in proceeding", "PAPER", "Peer-reviewed Paper" ]:
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "refereed"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "conferencePaper"
-            ET.SubElement(mods, "genre", {"authority": "svep", "type": "publicationType"}).text = "kon"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Conference paper"
             ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "proceeding"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationSubTypeCode"}).text = "publishedPaper"
-        elif type_crossref in ["book-chapter", "book-part"]:
+        elif primary_location_raw_type == "Conference Paper, other":
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "conferencePaper"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Conference paper"
+            ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "proceeding"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationSubTypeCode"}).text = "publishedPaper"
+        elif primary_location_raw_type in ["Conference Meeting Abstract", "contributiontoconference/abstract"]:
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "conferencePaper"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Conference paper"
+            ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "proceeding"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationSubTypeCode"}).text = "publishedPaper"          
+        elif primary_location_raw_type in ["journal-article", "article-journal", "Article in journal", "Article, other", "Article, other scientific","Article, peer reviewed scientific","contributiontojournal/article","contributiontoperiodical/newspaperarticle","contributionToPeriodical","info:eu-repo/semantics/article","journal article","Journal Item","journalArticle"]:
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "refereed"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "article"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Article in journal"
+            ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "article"
+        elif primary_location_raw_type in ["Article, review","Article, review peer-reviewed scientific"]:
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "refereed"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "review" 
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Article, review/survey"
+            ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "article"
+        elif primary_location_raw_type == "Conference Abstract":
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "article"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Article in journal"
+            ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "article"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationSubTypeCode"}).text = "meetingAbstract"
+        elif primary_location_raw_type == "contributiontoperiodical/newspaperarticle":
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "other"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "article"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Article in journal"
+            ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "article"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationSubTypeCode"}).text = "newsItem"
+        elif primary_location_raw_type == "Article, book review":
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "bookReview"
+            ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Article, book review"
+            ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "article"
+        elif primary_location_raw_type in ["book-chapter", "book-part", "book sections", "contributiontoeditedbook/bookchapter","contributionToEditedBook","Book Section","bookChapter","chapter in raport","contributiontobookanthology/chapter"]:
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "chapter"
-            ET.SubElement(mods, "genre", {"authority": "svep", "type": "publicationType"}).text = "kap"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Chapter in book"
             ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "bookitem"
-        elif type_crossref in ["book", "monograph", "book-set"]:
+        elif primary_location_raw_type in ["book", "monograph", "book-set","Buch / Monografie","Hochschulschrift","info:eu-repo/semantics/book"]:
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "book"
-            ET.SubElement(mods, "genre", {"authority": "svep", "type": "publicationType"}).text = "bok"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Book"
             ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "book"
-        elif type_crossref == "report":
+        elif primary_location_raw_type in ["report","bookanthology/report","Reports","info:eu-repo/semantics/report"]:
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "report"
-            ET.SubElement(mods, "genre", {"authority": "svep", "type": "publicationType"}).text = "rap"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Report"
             ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "book"
-        elif type_crossref == "edited-book":
+        elif primary_location_raw_type in ["edited-book","bookanthology/book","Aufsatzsammlung"]:
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "collection"
-            ET.SubElement(mods, "genre", {"authority": "svep", "type": "publicationType"}).text = "sam"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Collection (editor)"
             ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "book"
-        elif type_crossref == "posted-content":
+        elif primary_location_raw_type == "posted-content":
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "manuscript"
-            ET.SubElement(mods, "genre", {"authority": "svep", "type": "publicationType"}).text = "vet"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Manuscript (preprint)"
             ET.SubElement(mods, "genre", {"authority": "kev", "type": "publicationType", "lang": "eng"}).text = "preprint"
         else:
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "contentTypeCode"}).text = "science"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "vet"
-            ET.SubElement(mods, "genre", {"authority": "svep", "type": "publicationType"}).text = "ovr"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Other"
 
         # Add author information
@@ -173,7 +214,7 @@ def json_to_xml(json_data_list, output_file):
             ET.SubElement(name_elem, "namePart", {"type": "given"}).text = given_name
 
             # Add the <role> element
-            if type_crossref == "edited-book":
+            if primary_location_raw_type in ["edited-book","bookanthology/book","Aufsatzsammlung"]:
                 role_elem = ET.SubElement(name_elem, "role")
                 ET.SubElement(role_elem, "roleTerm", {"type": "code", "authority": "marcrelator"}).text = "edt"
             else:
@@ -238,7 +279,7 @@ def json_to_xml(json_data_list, output_file):
 
         # Extract the publisher information from "host_organization_name"
         primary_location = json_data.get("primary_location", {})
-        source = primary_location.get("source", None)  # Explicitly check if source is None
+        source = primary_location.get("host_organization_name", None)  # Explicitly check if source is None
 
         # Only proceed if source is not None
         if source:
@@ -338,8 +379,19 @@ def json_to_xml(json_data_list, output_file):
                 ET.SubElement(extent_elem, "end").text = page_end
        
 
-        if type_crossref == "journal-article" and not biblio.get("volume") and not biblio.get("issue"):
+        if primary_location_raw_type in ["journal-article", "article-journal", "Article in journal", "Article, other", "Article, other scientific","Article, peer reviewed scientific","contributiontojournal/article",
+                                         "contributiontoperiodical/newspaperarticle","contributionToPeriodical","info:eu-repo/semantics/article","journal article","Journal Item","journalArticle","Article, book review",
+                                         "Article, review","Article, review peer-reviewed scientific"] and not biblio.get("volume") and not biblio.get("issue"):
             ET.SubElement(mods, "note", {"type": "publicationStatus", "lang": "eng"}).text = "Epub ahead of print"    
+
+        # Add funding information
+        funders = json_data.get("funders", [])
+        if funders:
+            for funder in funders:
+                funder_name = funder.get("display_name", "")
+                if funder_name:
+                    ET.SubElement(mods, "note", {"type": "funder"}).text = funder_name
+
         
     # Write the XML to a file
     tree = ET.ElementTree(mods_collection)
