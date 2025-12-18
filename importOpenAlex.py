@@ -5,8 +5,8 @@ import xml.etree.ElementTree as ET
 import datetime  # Import datetime for date formatting
 
 # List of OpenAlex IDs to fetch
-openalex_ids = ["W4416058888","W4416100601","W4416100703","W4416197466","W4416544822","W4416567245","W4416697368","W4416735611","W7104457781","W7104625779","W7104636571","W7104702173","W7105642122","W7106579469","W7106647321","W7106768176"]
-doi = []
+openalex_ids = []
+doi = ["10.1145/3770501.3770517","10.1177/14639491251399202","10.1140/epjd/s10053-025-01105-8"]
 
 def fetch_openalex_records(openalex_ids, dois, output_file):
     """

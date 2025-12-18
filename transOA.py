@@ -104,7 +104,8 @@ def json_to_xml(json_data_list, output_file):
         "RO": "Romania",
         "BG": "Bulgaria",
         "SI": "Slovenia",
-        "KH": "Cambodia"
+        "KH": "Cambodia",
+        "VN": "Vietnam",
         # Add more mappings as needed
     }
 
@@ -194,54 +195,97 @@ def json_to_xml(json_data_list, output_file):
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationTypeCode"}).text = "vet"
             ET.SubElement(mods, "genre", {"authority": "diva", "type": "publicationType", "lang": "eng"}).text = "Other"
 
-        # Add author information
+        # Add author information with duplicate handling (preserve order, keep conflicts)
         authorships = json_data.get("authorships", [])
-
+        
+        # Track the first instance of each author to check for conflicts
+        seen_authors = {}  # display_name -> first instance data
+        
         for authorship in authorships:
             author = authorship.get("author", {})
             institutions = authorship.get("institutions", [])
             display_name = author.get("display_name", "")
             orcid = author.get("orcid", None)
-
-            # Split the display_name into family and given names
-            name_parts = display_name.split()
-            family_name = name_parts[-1] if name_parts else ""
-            given_name = " ".join(name_parts[:-1]) if len(name_parts) > 1 else ""
-
-            # Create the <name> element
-            name_elem = ET.SubElement(mods, "name", {"type": "personal"})
-            ET.SubElement(name_elem, "namePart", {"type": "family"}).text = family_name
-            ET.SubElement(name_elem, "namePart", {"type": "given"}).text = given_name
-
-            # Add the <role> element
-            if primary_location_raw_type in ["edited-book","bookanthology/book","Aufsatzsammlung"]:
-                role_elem = ET.SubElement(name_elem, "role")
-                ET.SubElement(role_elem, "roleTerm", {"type": "code", "authority": "marcrelator"}).text = "edt"
-            else:
-                role_elem = ET.SubElement(name_elem, "role")
-                ET.SubElement(role_elem, "roleTerm", {"type": "code", "authority": "marcrelator"}).text = "aut"
-
-            # Add the <affiliation> element
+            
+            # Create affiliation string
             affiliations = []
             for institution in institutions:
-                display_name = institution.get("display_name", "")
+                inst_display_name = institution.get("display_name", "")
                 country_code = institution.get("country_code", "")
                 country_name = country_code_mapping.get(country_code)
-
+                
                 if not country_name:
-                    # Print an error message if the country code is not found
                     print(f"Error: Country code '{country_code}' not found in country_code_mapping.")
-                    country_name = country_code  # Fallback to using the country code itself
-                 
-                if display_name:
-                    affiliations.append(f"{display_name}, {country_name}")
+                    country_name = country_code
+                
+                if inst_display_name:
+                    affiliations.append(f"{inst_display_name}, {country_name}")
+            
+            affiliation_str = "; ".join(affiliations)
+            current_author_data = {
+                'orcid': orcid,
+                'affiliation': affiliation_str,
+                'institutions': institutions
+            }
+            
+            # Check if we've seen this author before
+            if display_name in seen_authors:
+                # Check for conflicts with the first instance
+                first_instance = seen_authors[display_name]
+                has_orcid_conflict = (first_instance['orcid'] != current_author_data['orcid']) and (first_instance['orcid'] and current_author_data['orcid'])
+                has_affiliation_conflict = (first_instance['affiliation'] != current_author_data['affiliation']) and (first_instance['affiliation'] and current_author_data['affiliation'])
+                
+                # If there are conflicts, add this as a separate author entry
+                if has_orcid_conflict or has_affiliation_conflict:
+                    # Create XML for this conflicting author
+                    name_parts = display_name.split()
+                    family_name = name_parts[-1] if name_parts else ""
+                    given_name = " ".join(name_parts[:-1]) if len(name_parts) > 1 else ""
 
-            ET.SubElement(name_elem, "affiliation").text = "; ".join(affiliations)
+                    name_elem = ET.SubElement(mods, "name", {"type": "personal"})
+                    ET.SubElement(name_elem, "namePart", {"type": "family"}).text = family_name
+                    ET.SubElement(name_elem, "namePart", {"type": "given"}).text = given_name
 
-            # Add the <description> element if ORCID is present
-            if orcid:
-                orcid_value = orcid.replace("https://orcid.org/", "")
-                ET.SubElement(name_elem, "description").text = f"orcid.org={orcid_value}"
+                    if primary_location_raw_type in ["edited-book","bookanthology/book","Aufsatzsammlung"]:
+                        role_elem = ET.SubElement(name_elem, "role")
+                        ET.SubElement(role_elem, "roleTerm", {"type": "code", "authority": "marcrelator"}).text = "edt"
+                    else:
+                        role_elem = ET.SubElement(name_elem, "role")
+                        ET.SubElement(role_elem, "roleTerm", {"type": "code", "authority": "marcrelator"}).text = "aut"
+
+                    if current_author_data['affiliation']:
+                        ET.SubElement(name_elem, "affiliation").text = current_author_data['affiliation']
+
+                    if current_author_data['orcid']:
+                        orcid_value = current_author_data['orcid'].replace("https://orcid.org/", "")
+                        ET.SubElement(name_elem, "description").text = f"orcid.org={orcid_value}"
+                # If no conflicts, skip this duplicate (don't add it again)
+            else:
+                # First time seeing this author, store their data and create XML
+                seen_authors[display_name] = current_author_data
+                
+                # Create XML for the first instance
+                name_parts = display_name.split()
+                family_name = name_parts[-1] if name_parts else ""
+                given_name = " ".join(name_parts[:-1]) if len(name_parts) > 1 else ""
+
+                name_elem = ET.SubElement(mods, "name", {"type": "personal"})
+                ET.SubElement(name_elem, "namePart", {"type": "family"}).text = family_name
+                ET.SubElement(name_elem, "namePart", {"type": "given"}).text = given_name
+
+                if primary_location_raw_type in ["edited-book","bookanthology/book","Aufsatzsammlung"]:
+                    role_elem = ET.SubElement(name_elem, "role")
+                    ET.SubElement(role_elem, "roleTerm", {"type": "code", "authority": "marcrelator"}).text = "edt"
+                else:
+                    role_elem = ET.SubElement(name_elem, "role")
+                    ET.SubElement(role_elem, "roleTerm", {"type": "code", "authority": "marcrelator"}).text = "aut"
+
+                if current_author_data['affiliation']:
+                    ET.SubElement(name_elem, "affiliation").text = current_author_data['affiliation']
+
+                if current_author_data['orcid']:
+                    orcid_value = current_author_data['orcid'].replace("https://orcid.org/", "")
+                    ET.SubElement(name_elem, "description").text = f"orcid.org={orcid_value}"
         # Add Language
         language_field = json_data.get("language", "")
         if isinstance(language_field, dict):
